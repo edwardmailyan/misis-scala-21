@@ -12,9 +12,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
 
 object AccountApp {
-    private def startHttpServer(routes: Route)(implicit system: ActorSystem): Unit = {
 
-        val futureBinding = Http().newServerAt("localhost", 8080).bind(routes)
+    private def startHttpServer(routes: Route, port: Int)(implicit system: ActorSystem): Unit = {
+
+        val futureBinding = Http().newServerAt("localhost", port).bind(routes)
         futureBinding.onComplete {
             case Success(binding) =>
                 val address = binding.localAddress
@@ -29,9 +30,13 @@ object AccountApp {
     val elastic = ElasticClient(JavaClient(props))
 
     def main(args: Array[String]): Unit = {
-        implicit val system = ActorSystem("CategoryApp")
-        val service = new Service()
+        implicit val system = ActorSystem("AccountApp")
+        val config = system.settings.config
+        val port = config.getInt("my-app.port")
+        val accountId = config.getInt("my-app.accountId")
+
+        val service = new Service(accountId)
         val routes = new Routes(service)
-        startHttpServer(routes.routes)
+        startHttpServer(routes.routes, port)
     }
 }
