@@ -38,5 +38,6 @@ class Service(val accountId: Int)(implicit val system: ActorSystem, executionCon
             state = state.update(value)
             logger.info(s"State updated ${value} ${state}")
         }
+        .log("AccountUpdated error")
         .runWith(Sink.ignore)
 }
