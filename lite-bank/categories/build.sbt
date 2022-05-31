@@ -2,9 +2,11 @@ lazy val akkaHttpVersion = "10.2.9"
 lazy val akkaVersion = "2.6.19"
 
 lazy val common = ProjectRef(base = file("../../reactive-pizza/common"), id = "common")
+lazy val account = ProjectRef(base = file("../account"), id = "account")
 
 lazy val root = (project in file("."))
     .dependsOn(common)
+    .dependsOn(account)
     .settings(
         inThisBuild(List(
             organization := "ru.misis",

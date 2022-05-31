@@ -4,5 +4,5 @@ import ru.misis.model.Account.AccountUpdated
 import spray.json.DefaultJsonProtocol._
 
 object ModelJsonFormats {
-    implicit val formatAccountUpdated = jsonFormat2(AccountUpdated)
+    implicit val formatAccountUpdated = jsonFormat4(AccountUpdated)
 }

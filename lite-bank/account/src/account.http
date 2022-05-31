@@ -2,11 +2,28 @@
 GET localhost:8101/amount
 
 ###
-POST localhost:8101/amount/100
+POST localhost:8101/amount/100/atm
 
 ###
-POST localhost:8101/amount/17
+POST localhost:8101/amount/17/transfer
 
+###
+POST localhost:8101/amount/2/transfer
+
+###
+POST localhost:8101/amount/3/atm
+
+###
+POST localhost:8101/amount/33/atm
+
+###
+POST localhost:8101/amount/22/atm
+
+###
+POST localhost:8101/amount/27/transfer
+
+###
+POST localhost:8101/snapshot
 
 ###
 GET localhost:8102/amount
@@ -16,3 +33,6 @@ POST localhost:8102/amount/98
 
 ###
 POST localhost:8102/amount/11
+
+###
+GET localhost:8080/report

@@ -20,11 +20,18 @@ class Routes(service: Service)(implicit val system: ActorSystem) {
                 complete(StatusCodes.OK, s"Account ${service.accountId} amount: ${service.getAmount}")
             }
         } ~
-        path("amount" / IntNumber) { value =>
+        path("amount" / IntNumber / Segment) { (amount, category) =>
             post {
-                onSuccess(service.update(value)) {
+                onSuccess(service.update(amount, category)) {
                     case Left(message) => complete(StatusCodes.BadRequest, message)
                     case Right(value) => complete(StatusCodes.OK, "OK")
+                }
+            }
+        } ~
+        path("snapshot") {
+            post {
+                onSuccess(service.snapshot()) {
+                    complete("Snapshot Created")
                 }
             }
         }
