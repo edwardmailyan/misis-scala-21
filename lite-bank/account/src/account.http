@@ -1,38 +1,14 @@
 ###
+POST http://localhost:8101/create
+Content-Type: application/json
+
+{
+  "amount": 120
+}
+
+###
 GET localhost:8101/amount
 
 ###
-POST localhost:8101/amount/100/atm
+POST http://localhost:8101/amount/100/category1
 
-###
-POST localhost:8101/amount/17/transfer
-
-###
-POST localhost:8101/amount/2/transfer
-
-###
-POST localhost:8101/amount/3/atm
-
-###
-POST localhost:8101/amount/33/atm
-
-###
-POST localhost:8101/amount/22/atm
-
-###
-POST localhost:8101/amount/27/transfer
-
-###
-POST localhost:8101/snapshot
-
-###
-GET localhost:8102/amount
-
-###
-POST localhost:8102/amount/98
-
-###
-POST localhost:8102/amount/11
-
-###
-GET localhost:8080/report
