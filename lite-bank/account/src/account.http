@@ -10,5 +10,17 @@ Content-Type: application/json
 GET localhost:8101/amount
 
 ###
-POST http://localhost:8101/amount/100/category1
+GET localhost:8102/amount
+
+###
+POST http://localhost:8101/transfer
+Content-Type: application/json
+
+{
+  "targetAccountId": 2,
+  "amount": 11
+}
+
+###
+GET localhost:8102/amount
 

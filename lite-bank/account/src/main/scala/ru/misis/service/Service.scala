@@ -5,6 +5,8 @@ import akka.stream.scaladsl.{Sink, Source}
 import org.slf4j.LoggerFactory
 import ru.misis.model.Account.{AccountUpdated, State}
 import ru.misis.util.WithKafka
+import scala.util.{Success, Failure}
+
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -19,46 +21,63 @@ class Service(val accountId: Int)(implicit val system: ActorSystem, executionCon
   def getAmount: Int = state.amount
 
   def update(value: Int, category: String) = {
-    val cashbackPercent = category match {
-      case "category1" => 5
-      case "category2" => 10
-      case "category3" => 15
-      case _ => 0
-    }
-    val cashbackAmount = (value * cashbackPercent) / 100
-    val totalValue = value - cashbackAmount
-    if (state.amount + totalValue < 0)
+    if (state.amount + value < 0)
       Future.successful(Left("Недостаточно средств на счете"))
     else {
-      publishEvent(AccountUpdated(Some(accountId), totalValue, Some(category))).map(Right(_))
+      publishEvent(AccountUpdated(Some(accountId), value, Some(category))).map(Right(_))
     }
   }
 
+  def transfer(targetAccountId: Int, amount: Int): Future[Either[String, Unit]] = {
+    if (targetAccountId == accountId) {
+      Future.successful(Left("Cannot transfer funds to the same account"))
+    } else if (amount <= 0) {
+      Future.successful(Left("Invalid transfer amount"))
+    } else if (state.amount < amount) {
+      Future.successful(Left("Invalid transfer amount"))
+    } else {
+      publishEvent(AccountUpdated(Some(this.accountId), -amount, Some("category"))).map(Right(_))
+      publishEvent(AccountUpdated(Some(targetAccountId), amount, Some("category"))).map(Right(_))
+    }
+  }
+
+
+  /*
+      send -amount
+      commit (save offset)
+      send +amount
+   */
   def snapshot(): Future[Unit] = {
     val amount = getAmount
     Source(Seq(
-      AccountUpdated(Some(accountId), -amount, None, Some(true)),
-      AccountUpdated(Some(accountId), +amount)
+      AccountUpdated(Some(accountId), - amount, None, Some(true)),
+      AccountUpdated(Some(accountId), + amount)
     )).runWith(kafkaSink).map(_ => ())
   }
 
+  /*
+  Snapshot:
+   - сохранить состояние
+   - сохранить offset
+   */
   kafkaCSource[AccountUpdated]
     .filter {
-      case (_, AccountUpdated(Some(id), _, _, _)) =>
+      case (_, AccountUpdated(Some(id), _,  _, _)) =>
         id == accountId
       case (_, event) =>
         logger.info(s"Empty account ${event}")
         false
     }
-    .map { case message@(_, AccountUpdated(_, value, _, _)) =>
+    .map { case message @ (_, AccountUpdated(_, value,  _, _)) =>
       state = state.update(value)
       logger.info(s"State updated ${value} ${state}")
       message
     }
-    .filter { case (_, AccountUpdated(_, _, _, needCommit)) => needCommit.getOrElse(false) }
+    .filter { case (_, AccountUpdated(_, _, _, needCommit)) => needCommit.getOrElse(false)}
     .map { case (offset, _) => offset }
     .log("AccountUpdated error")
     .runWith(committerSink)
+
 
   def create(amount: Int): Future[Either[String, Unit]] = {
     if (amount < 0)
@@ -78,3 +97,5 @@ class Service(val accountId: Int)(implicit val system: ActorSystem, executionCon
 
 
 }
+
+
