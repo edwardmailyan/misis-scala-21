@@ -3,7 +3,7 @@ package ru.misis.service
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Sink, Source}
 import org.slf4j.LoggerFactory
-import ru.misis.model.Account.{AccountUpdated, State}
+import ru.misis.model.Account.{AccountUpdated, State, TransferRequest}
 import ru.misis.util.WithKafka
 import scala.util.{Success, Failure}
 
@@ -33,11 +33,15 @@ class Service(val accountId: Int)(implicit val system: ActorSystem, executionCon
       Future.successful(Left("Cannot transfer funds to the same account"))
     } else if (amount <= 0) {
       Future.successful(Left("Invalid transfer amount"))
-    } else if (state.amount < amount) {
-      Future.successful(Left("Invalid transfer amount"))
     } else {
-      publishEvent(AccountUpdated(Some(this.accountId), -amount, Some("category"))).map(Right(_))
-      publishEvent(AccountUpdated(Some(targetAccountId), amount, Some("category"))).map(Right(_))
+      val transferRequest = TransferRequest(targetAccountId, amount)
+      update(-amount, "Transfer to " + targetAccountId).flatMap {
+        case Left(errorMessage) => Future.successful(Left(errorMessage))
+        case Right(_) => update(amount, "Transfer from " + accountId).flatMap {
+          case Left(errorMessage) => Future.successful(Left(errorMessage))
+          case Right(_) => publishEvent(transferRequest).map(_ => Right(()): Either[String, Unit])
+        }
+      }
     }
   }
 
