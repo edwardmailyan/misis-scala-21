@@ -4,9 +4,9 @@ import ru.misis.model.Account.{AccountUpdated, CreateAccountRequest, TransferReq
 import spray.json.DefaultJsonProtocol._
 
 object ModelJsonFormats {
-    implicit val formatAccountUpdated = jsonFormat4(AccountUpdated)
+    implicit val formatAccountUpdated = jsonFormat5(AccountUpdated)
 
     implicit val formatCreateAccountRequest = jsonFormat1(CreateAccountRequest)
-    implicit val formatTransferRequest = jsonFormat2(TransferRequest)
+    implicit val formatTransferRequest = jsonFormat4(TransferRequest)
 }
 
