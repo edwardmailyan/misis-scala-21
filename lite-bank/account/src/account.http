@@ -3,7 +3,7 @@ POST http://localhost:8101/create
 Content-Type: application/json
 
 {
-  "amount": 10
+  "amount": 30
 }
 
 ###
@@ -27,10 +27,10 @@ POST http://localhost:8101/transfer
 Content-Type: application/json
 
 {
-  "sourceSubAccount": 1,
-  "targetAccountId": 1,
+  "sourceSubAccount": 2,
+  "targetAccountId": 3,
   "targetSubAccount": 1,
-  "amount": 11
+  "amount": 10
 }
 
 ###
