@@ -20,22 +20,27 @@ class Routes(service: Service)(implicit val system: ActorSystem) {
 
   val routes: Route =
 
-    path("amount") {
+    path("accounts") {
       get {
-        complete(StatusCodes.OK, s"Account ${service.accountId} amount: ${service.getAmount}")
+        complete(StatusCodes.OK, s"Account ${service.accountId}:\n${service.getSubAccounts}")
       }
     } ~
-      path("amount" / IntNumber / Segment) { (amount, category) =>
+    path("amount" / IntNumber) { (index) =>
+      get {
+        complete(StatusCodes.OK, s"Account ${service.accountId} sub-account ${index} amount: ${service.getAmount(index)}")
+      }
+    } ~
+      path("amount" / IntNumber / IntNumber / Segment) { (index, amount, category) =>
         post {
-          onSuccess(service.update(amount, category)) {
+          onSuccess(service.update(index, amount, category)) {
             case Left(message) => complete(StatusCodes.BadRequest, message)
             case Right(value) => complete(StatusCodes.OK, "OK")
           }
         }
       } ~
-      path("snapshot") {
+    path("snapshot" / IntNumber) { (index) =>
         post {
-          onSuccess(service.snapshot()) {
+          onSuccess(service.snapshot(index)) {
             complete("Snapshot Created")
           }
         }
@@ -53,7 +58,10 @@ class Routes(service: Service)(implicit val system: ActorSystem) {
       path("transfer") {
         post {
           entity(as[TransferRequest]) { request =>
-            onSuccess(service.transfer(request.targetAccountId, request.amount)) {
+            onSuccess(service.transfer(request.sourceSubAccount,
+                                       request.targetAccountId,
+                                       request.targetSubAccount,
+                                       request.amount)) {
               case Left(errorMessage) => complete(StatusCodes.BadRequest, errorMessage)
               case Right(_) => complete(StatusCodes.OK, "Transfer successful")
             }
