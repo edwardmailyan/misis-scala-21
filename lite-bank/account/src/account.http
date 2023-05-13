@@ -27,9 +27,9 @@ POST http://localhost:8101/transfer
 Content-Type: application/json
 
 {
-  "sourceSubAccount": 2,
-  "targetAccountId": 3,
-  "targetSubAccount": 1,
+  "sourceSubAccount": 3,
+  "targetAccountId": 1,
+  "targetSubAccount": 2,
   "amount": 10
 }
 
