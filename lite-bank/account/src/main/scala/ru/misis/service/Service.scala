@@ -42,7 +42,8 @@ class Service(val accountId: Int)(implicit val system: ActorSystem, executionCon
       if (targetSubAccount == sourceSubAccount){
         Future.successful(Left("Cannot transfer funds to the same account"))
       } else {
-        publishEvent(AccountUpdated(Some(state.id), Some(targetSubAccount), -amount, Some("category"))).map(Right(_))
+        publishEvent(AccountUpdated(Some(state.id), Some(sourceSubAccount), -amount, Some("category"))).map(Right(_))
+        publishEvent(AccountUpdated(Some(state.id), Some(targetSubAccount), amount, Some("category"))).map(Right(_))
       }
     } else if (amount <= 0) {
       Future.successful(Left("Invalid transfer amount"))
