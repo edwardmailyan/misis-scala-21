@@ -5,6 +5,7 @@ import akka.stream.scaladsl.{Sink, Source}
 import org.slf4j.LoggerFactory
 import ru.misis.model.Account.{AccountUpdated, State, TransferRequest}
 import ru.misis.util.WithKafka
+import scala.collection.mutable
 import scala.util.{Success, Failure}
 
 
@@ -15,6 +16,7 @@ class Service(val accountId: Int)(implicit val system: ActorSystem, executionCon
   import ru.misis.model.ModelJsonFormats._
 
   private val logger = LoggerFactory.getLogger(this.getClass)
+  private val accounts: mutable.Map[Int, Int] = mutable.Map(accountId -> 0)
 
   private var state: State = State(accountId, 0)
 
