@@ -37,7 +37,11 @@ class Service(val accountId: Int)(implicit val system: ActorSystem, executionCon
                targetSubAccount: Int,
                amount: Int): Future[Either[String, Unit]] = {
     if (targetAccountId == accountId) {
-      Future.successful(Left("Cannot transfer funds to the same account"))
+      if (targetSubAccount == sourceSubAccount){
+        Future.successful(Left("Cannot transfer funds to the same account"))
+      } else {
+        publishEvent(AccountUpdated(Some(state.id), Some(targetSubAccount), -amount, Some("category"))).map(Right(_))
+      }
     } else if (amount <= 0) {
       Future.successful(Left("Invalid transfer amount"))
     } else if (state.accounts(sourceSubAccount) < amount) {
@@ -90,7 +94,8 @@ class Service(val accountId: Int)(implicit val system: ActorSystem, executionCon
     if (amount < 0)
       Future.successful(Left("Invalid amount"))
     else {
-      val newAccountId = state.accounts.size
+
+      val newAccountId = if (state.accounts.isEmpty) 0 else state.accounts.keys.max + 1
       state.accounts += (newAccountId -> amount)
 
       snapshot(newAccountId).map(_ => {
