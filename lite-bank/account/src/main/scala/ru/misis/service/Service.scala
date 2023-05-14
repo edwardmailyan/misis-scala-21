@@ -7,7 +7,6 @@ import ru.misis.model.Account.{AccountUpdated, State, TransferRequest}
 import ru.misis.util.WithKafka
 import scala.collection.mutable
 import scala.util.{Success, Failure}
-import scala.collection.mutable
 
 import scala.collection.mutable.Map
 
