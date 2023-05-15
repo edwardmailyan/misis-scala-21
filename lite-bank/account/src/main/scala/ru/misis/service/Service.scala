@@ -55,24 +55,6 @@ class Service(val accountId: Int)(implicit val system: ActorSystem, executionCon
   }
 
 
-  /*
-      send -amount
-      commit (save offset)
-      send +amount
-   */
-  def snapshot(index: Int): Future[Unit] = {
-    val amount = getAmount(index)
-    Source(Seq(
-      AccountUpdated(Some(accountId), Some(index), - amount, None, Some(true)),
-      AccountUpdated(Some(accountId), Some(index), + amount)
-    )).runWith(kafkaSink).map(_ => ())
-  }
-
-  /*
-  Snapshot:
-   - сохранить состояние
-   - сохранить offset
-   */
   kafkaCSource[AccountUpdated]
     .filter {
       case (_, AccountUpdated(Some(id), _, _,  _, _)) =>
