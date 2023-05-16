@@ -65,8 +65,6 @@ class Service(val accountId: Int)(implicit val system: ActorSystem, executionCon
     .runWith(committerSink)
 
 
-
-
   def create(amount: Int): Future[Either[String, Unit]] = {
     if (amount < 0)
       Future.successful(Left("Invalid amount"))
@@ -75,7 +73,6 @@ class Service(val accountId: Int)(implicit val system: ActorSystem, executionCon
       val newAccountId = if (state.accounts.isEmpty) 0 else state.accounts.keys.max + 1
       state.accounts += (newAccountId -> amount)
       Future.successful(Right())
-
     }
   }
 
