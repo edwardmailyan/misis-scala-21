@@ -10,7 +10,7 @@ Content-Type: application/json
 GET localhost:8101/accounts
 
 ###
-POST http://localhost:8102/create
+POST http://localhost:8101/create
 Content-Type: application/json
 
 {
@@ -27,7 +27,7 @@ POST http://localhost:8101/transfer
 Content-Type: application/json
 
 {
-  "sourceSubAccount": 5,
+  "sourceAccount": 5,
   "targetAccountId": 1,
   "targetSubAccount": 2,
   "amount": 30

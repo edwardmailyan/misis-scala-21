@@ -17,9 +17,8 @@ class Service(val accountId: Int)(implicit val system: ActorSystem, executionCon
   import ru.misis.model.ModelJsonFormats._
 
   private val logger = LoggerFactory.getLogger(this.getClass)
-  private val accounts: mutable.Map[Int, Int] = mutable.Map(accountId -> 0)
 
-  private var state: State = State(accountId, Map.empty)
+  private var state: State = State(mutable.Map(accountId -> 0))
 
   def getSubAccounts: String = state.accounts.mkString("\n")
 
@@ -29,49 +28,43 @@ class Service(val accountId: Int)(implicit val system: ActorSystem, executionCon
     if (state.accounts(index) + value < 0)
       Future.successful(Left("Недостаточно средств на счете"))
     else {
-      publishEvent(AccountUpdated(Some(accountId), Some(index), value, Some(category))).map(Right(_))
+      publishEvent(AccountUpdated(Some(accountId), value, Some(category))).map(Right(_))
     }
   }
 
-  def transfer(sourceSubAccount: Int,
+  def transfer(sourceAccountId: Int,
                targetAccountId: Int,
-               targetSubAccount: Int,
                amount: Int): Future[Either[String, Unit]] = {
-    if (targetAccountId == accountId) {
-      if (targetSubAccount == sourceSubAccount){
-        Future.successful(Left("Cannot transfer funds to the same account"))
-      } else {
-        publishEvent(AccountUpdated(Some(state.id), Some(sourceSubAccount), -amount, Some("category"))).map(Right(_))
-        publishEvent(AccountUpdated(Some(state.id), Some(targetSubAccount), amount, Some("category"))).map(Right(_))
-      }
-    } else if (amount <= 0) {
+    if (amount <= 0) {
       Future.successful(Left("Invalid transfer amount"))
-    } else if (state.accounts(sourceSubAccount) < amount) {
+    } else if (state.accounts(sourceAccountId) + amount < 0) {
       Future.successful(Left("Invalid transfer amount"))
     } else {
-      publishEvent(AccountUpdated(Some(state.id), Some(sourceSubAccount), -amount, Some("category"))).map(Right(_))
-      publishEvent(AccountUpdated(Some(targetAccountId), Some(targetSubAccount), amount, Some("category"))).map(Right(_))
+      publishEvent(AccountUpdated(Some(sourceAccountId), -amount, Some("category"))).map(Right(_))
+      publishEvent(AccountUpdated(Some(targetAccountId), amount, Some("category"))).map(Right(_))
     }
   }
 
 
   kafkaCSource[AccountUpdated]
     .filter {
-      case (_, AccountUpdated(Some(id), _, _,  _, _)) =>
-        id == accountId
+      case (_, AccountUpdated(Some(id), _,  _, _)) =>
+        state.accounts.contains(id)
       case (_, event) =>
         logger.info(s"Empty account ${event}")
         false
     }
-    .map { case message @ (_, AccountUpdated(_, Some(index), value,  _, _)) =>
-      state = state.update(index, value)
+    .map { case message @ (_, AccountUpdated(Some(id), value, category, _)) =>
+      state = state.update(id, value)
       logger.info(s"State updated ${value} ${state}")
       message
     }
-    .filter { case (_, AccountUpdated(_, _, _, _, needCommit)) => needCommit.getOrElse(false)}
+    .filter { case (_, AccountUpdated(_, _, _, needCommit)) => needCommit.getOrElse(false)}
     .map { case (offset, _) => offset }
     .log("AccountUpdated error")
     .runWith(committerSink)
+
+
 
 
   def create(amount: Int): Future[Either[String, Unit]] = {
@@ -81,15 +74,8 @@ class Service(val accountId: Int)(implicit val system: ActorSystem, executionCon
 
       val newAccountId = if (state.accounts.isEmpty) 0 else state.accounts.keys.max + 1
       state.accounts += (newAccountId -> amount)
+      Future.successful(Right())
 
-      snapshot(newAccountId).map(_ => {
-        logger.info(s"Account $accountId created with initial balance $amount")
-        Right(())
-      }).recover {
-        case ex =>
-          logger.error(s"Error creating account $accountId: $ex")
-          Left(s"Error creating account $accountId: ${ex.getMessage}")
-      }
     }
   }
 

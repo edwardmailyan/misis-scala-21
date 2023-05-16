@@ -38,13 +38,6 @@ class Routes(service: Service)(implicit val system: ActorSystem) {
           }
         }
       } ~
-      path("snapshot" / IntNumber) { (index) =>
-        post {
-          onSuccess(service.snapshot(index)) {
-            complete("Snapshot Created")
-          }
-        }
-      } ~
       path("create") {
         post {
           entity(as[CreateAccountRequest]) { request =>
@@ -58,9 +51,8 @@ class Routes(service: Service)(implicit val system: ActorSystem) {
       path("transfer") {
         post {
           entity(as[TransferRequest]) { request =>
-            onSuccess(service.transfer(request.sourceSubAccount,
+            onSuccess(service.transfer(request.sourceAccountId,
               request.targetAccountId,
-              request.targetSubAccount,
               request.amount)) {
               case Left(errorMessage) => complete(StatusCodes.BadRequest, errorMessage)
               case Right(_) => complete(StatusCodes.OK, "Transfer successful")
