@@ -1,47 +1,31 @@
 ###
+# Get accounts
+GET localhost:8101/accounts
+
+###
+# Create account
 POST http://localhost:8101/create
 Content-Type: application/json
 
 {
-  "amount": 30
+  "amount": 100
 }
 
 ###
+# Get accounts
 GET localhost:8101/accounts
 
 ###
-POST http://localhost:8101/create
-Content-Type: application/json
-
-{
-  "amount": 0
-}
+POST localhost:8080/create/taxi/5
 
 ###
-GET localhost:8102/accounts
+GET localhost:8080/categories
+
 ###
+# Transfer from account 0 to account 1
+POST localhost:8101/transfer/1/0/100/taxi
+
+###
+# Get accounts
 GET localhost:8101/accounts
-
-###
-POST http://localhost:8101/transfer
-Content-Type: application/json
-
-{
-  "sourceAccount": 5,
-  "targetAccountId": 1,
-  "targetSubAccount": 2,
-  "amount": 30
-}
-
-###
-POST http://localhost:8102/transfer
-Content-Type: application/json
-
-{
-  "targetAccountId": 1,
-  "amount": 110
-}
-
-###
-GET localhost:8102/amount
 

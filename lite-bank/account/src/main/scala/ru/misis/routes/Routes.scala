@@ -10,7 +10,7 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import ru.misis.service.Service
-import ru.misis.model.Account.{CreateAccountRequest, TransferRequest}
+import ru.misis.model.Account.{CreateAccountRequest}
 import ru.misis.model.ModelJsonFormats._
 
 import scala.concurrent.Future
@@ -19,6 +19,7 @@ class Routes(service: Service)(implicit val system: ActorSystem) {
   private implicit val timeout = Timeout.create(system.settings.config.getDuration("my-app.routes.ask-timeout"))
 
   val routes: Route =
+
 
     path("accounts") {
       get {
@@ -48,16 +49,14 @@ class Routes(service: Service)(implicit val system: ActorSystem) {
           }
         }
       } ~
-      path("transfer") {
+      path("transfer" / IntNumber / IntNumber / IntNumber / Segment.?) { (sourceAccountId, targetAccountId, amount, category) =>
         post {
-          entity(as[TransferRequest]) { request =>
-            onSuccess(service.transfer(request.sourceAccountId,
-              request.targetAccountId,
-              request.amount)) {
-              case Left(errorMessage) => complete(StatusCodes.BadRequest, errorMessage)
-              case Right(_) => complete(StatusCodes.OK, "Transfer successful")
-            }
+
+          onSuccess(service.transfer(sourceAccountId, targetAccountId, amount, category)) {
+            case Left(errorMessage) => complete(StatusCodes.BadRequest, errorMessage)
+            case Right(_) => complete(StatusCodes.OK, "Transfer successful")
           }
+
         }
       }
 }

@@ -17,10 +17,6 @@ object Account {
                               value: Int,
                               category: Option[String] = None,
                               needCommit: Option[Boolean] = Some(false)) extends Event
-    case class CreateAccountRequest(amount: Int)
-
-    case class TransferRequest(sourceAccountId: Int,
-                               targetAccountId: Int,
-                               amount: Int) extends Event
+    case class CreateAccountRequest(amount: Int) extends Event
 
 }
